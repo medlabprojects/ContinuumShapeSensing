@@ -1,4 +1,15 @@
-function [s, state] = solve_stochastic_rod(p_0, p_cov_0, R_0, R_cov_0, D, E, G, N, sSpan, f, f_cov, l, l_cov)
+function [s, state] = solve_rod_collocation(f, l, D, E, G, N, L, p_0, R_0, p_L, R_L)
+% Given the loading on the rod f and l (function handles), the rod diameter
+% D, the elastic modulus E, and shear modulus G, the number of collocation
+% points N, the length of the rod L, and (possible) initial and final
+% conditions of the rod, the function uses a collocation method with
+% B-splines to attempt to solve an approximating solution for the state x
+% (function handle). The internal loading in the rod is treated as a
+% boundary condition for this problem 
+
+
+
+
 % We assume here that both rod ends are force and moment free. We will
 % initialize all states and forcing functions and then solve the boundary
 % value problem subject to the boundary conditions using an optimization
