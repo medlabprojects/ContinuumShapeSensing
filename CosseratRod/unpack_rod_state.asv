@@ -5,5 +5,5 @@ n = x(8:10);
 m = x(11:13);
 
 % Unitize q
-q = q./(norm(q));
+q = q./(norm(q
 end

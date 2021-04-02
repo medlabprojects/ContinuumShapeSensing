@@ -1,7 +1,11 @@
-function state = pack_rod_state(p, R, n, m)
+function x = pack_rod_state(p, q, n, m)
 
-R = orthogonalize_rotation_matrix(R);
+if size(q) == [3,3] % If q is a rotation matrix
+    q = rotm2quat(q)'; % Convert it to a quaternion
+end
 
-state = [p; R(:,1); R(:,2); R(:,3); n; m];
+% Unitize the quaternion
+q = q./(norm(q));
 
+x = [p; q; n; m];
 end
