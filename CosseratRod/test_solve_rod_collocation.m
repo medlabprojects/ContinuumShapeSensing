@@ -12,29 +12,34 @@ K = [E*I 0 0; 0 E*I 0; 0 0 2*G*I];
 % Integration constants
 p_0 = zeros(3,1);
 R_0 = eye(3);
-N = 100; % Num collocation points
-M = 15; % Dimension of spline spaces
+N = 50; % Num collocation points, number of conditions is 3*N
+M = 12; % Dimension of spline spaces, number of variables is 3*M
 s_span = [0, 1];
 
 % Now we need a forcing function f,l : [0,1] -> R3
 s = linspace(0, 1, 10000);
-f_data = zeros(3, 10000);
-l_data = zeros(3, 10000);
 
-% f_data(1:2,55:65) = 5;
-f_data(1:2,5000:6000) = -3;
+% Want guassian loading functions
+f1 = normpdf(s, 0.2, 0.01) + normpdf(s, 0.8, 0.01);
+f2 = normpdf(s, 0.5, 0.01);
+
+f_data = zeros(3, length(s));
+l_data = zeros(3, length(s));
+
+f_data(1,:) = f1;
+f_data(2,:) = f2;
 
 d = 5;
-f_spline = BSpline.least_squares_fit(f_data, s, d, 1000);
-l_spline = BSpline.least_squares_fit(l_data, s, d, 1000);
+f_spline = BSpline.least_squares_fit(f_data, s, d, 500);
+l_spline = BSpline.least_squares_fit(l_data, s, d, 500);
 
 f = @(s) f_spline.evaluate(s);
 l = @(s) l_spline.evaluate(s);
 
 % Solve and plot the rod
-x = solve_rod_collocation(f, l, K, N, M, L, p_0, R_0);
+[p, q, n, m] = solve_rod_collocation(f, l, K, N, M, L, p_0, R_0);
 
 figure(1);
 clf;
 
-plot_static_rod(x, f, l, L);
+plot_static_rod(p, q, f, l, L);

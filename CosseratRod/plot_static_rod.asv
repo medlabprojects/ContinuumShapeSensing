@@ -1,20 +1,25 @@
-function plot_static_rod(x, f, l, s)
+function plot_static_rod(p, q, f, l, L);
 
 % First convert forces from local frame to global
-xs = x(s);
-fs = f(s);
+s = linspace(0, L, 1000);
+p_s = p(s);
+q_s = q(s);
+f_s = f(s);
 
-f_global = local_force_to_global(fs, xs);
+f_s = local_force_to_global(f_s, q_s);
 
-x = xs(1,:);
-y = xs(2,:);
-z = xs(3,:);
+x = p_s(1,:);
+y = p_s(2,:);
+z = p_s(3,:);
 
-f_x = f_global(1,:);
-f_y = f_global(2,:);
-f_z = f_global(3,:);
+f_x = f_s(1,:);
+f_y = f_s(2,:);
+f_z = f_s(3,:);
 
 hold on;
+
+N = 100;
+plot_transforms(downsample(p_s', N), downsample(q_s', N), 'FrameSize', 0.025, 'LineWidth', 1);
 
 plot3(x, y, z, '-k', 'LineWidth', 5);
 quiver3(x, y, z, f_x, f_y, f_z);
@@ -29,13 +34,16 @@ ylabel('y')
 zlabel('z')
 end
     
-function f_global = local_force_to_global(f_local, x)
-    N = size(x, 1);
+function f_global = local_force_to_global(f_local, q)
     f_global = zeros(size(f_local));
     
-    for iii = 1:N
-        [~, q] = unpack_rod_state(x(:,iii));
-        R = quat2rotm(q');
+    for iii = 1:size(q,2)
+        R = quat2rotm(q(:,iii)');
         f_global(:,iii) = R*f_local(:,iii);
     end
+end
+
+function plot_transforms(p, q, sz, lw);
+    for iii = 1:size(p,
+
 end

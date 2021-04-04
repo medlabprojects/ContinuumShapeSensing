@@ -17,9 +17,12 @@ function x = solve_rod_collocation(f, l, K, N, M, L, p_0, R_0)
 
 d = 5;
 k = M - d - 1;
-x_spline = BSpline([0, L], d, 13, k);
-x_spline.C(4,:) = 1; % For quaternions
-C0 = x_spline.C;
+
+% Local curvature
+u_spline = BSpline([0, L], d, 3, k);
+
+% We're going to solve for the correct C
+C0 = u_spline.C;
 
 s = linspace(0, L, N);
 
@@ -27,60 +30,88 @@ options = optimoptions('fsolve');
 options.Display = 'iter';
 options.Algorithm = 'levenberg-marquardt';
 
-obj = @(C) compute_total_residual(C, x_spline, f, l, s, K, p_0, R_0);
+obj = @(C) compute_total_residual(C, u_spline, f, l, s, K, p_0, R_0);
 C = fsolve(obj, C0, options);
 
-x_spline.C = C;
-
+[~, x_spline] = obj(C);
 x = @(s) x_spline.evaluate(s);
 end
 
-function res = compute_residuals(C, x_spline, f, l, s, K, p_0, R_0)
-    % Update spline and get derivative too
-    x_spline.C = C;
-    x_spline_deriv = x_spline.deriv();
-    
-    % Evaluate on the collocation points
-    x_s = x_spline.evaluate(s);
-    xp_s = x_spline_deriv.evaluate(s);
-    
-    f_s = f(s);
-    l_s = l(s);
-    
-    % Determine the goodness of fit for the differential eq. constraint
-    xp_res = zeros(13, length(s));
+function res = compute_residual(C, u_spline, f, l, s, K, p_0, R_0)
     
     e_3 = [0; 0; 1];
     
-    for iii = 1:length(s)
-        [~, qi, ni, mi] = unpack_rod_state(x_s(:,iii));
-        fi = f_s(:,iii);
-        li = l_s(:,iii);
-        
-        Ri = quat2rotm(qi');
-        ui = (K\(Ri'))*mi;
-        
-        p_dot = Ri*e_3;
-        q_dot = 1/2*quatmultiply(qi', [0; ui]');
-        n_dot = -fi;
-        m_dot = -cross(p_dot, ni) - li;
-        
-        xp_i = [p_dot; q_dot'; n_dot; m_dot];
-        xp_res(:,iii) = xp_i - xp_s(:,iii);
-    end
+    u_spline.C = C;
+    u = @(s) u_spline.evaluate(s);
+    v = @(s) e_3;
     
-    % Determine goodness of fit for the base and tip constraints
-    x_0 = x_s(:,1);
-    [p_0_coll, q_0_coll] = unpack_rod_state(x_0);
-    
-    base_res = [p_0_coll - p_0; [1; 0; 0; 0] - quatmultiply(q_0_coll', rotm2quat(R_0'))'];
-    
-    x_L = x_s(:,end);
-    tip_res = x_L(8:end);
-    
-    % Determine the goodness of fit for the quaternions
-    q = x_s(4:7,:);
-    q_res = quatnormalize(q) - q;
-
-    res = [xp_res(:); base_res(:); tip_res(:); q_res(:)]; 
+    res = compute_u_res(f, l, u, v, s, p_0, R_0, K);
 end
+
+
+function [u_res, p, q, n, m] = compute_u_res(f, l, u, v, s, p_0, R_0, K)
+    
+    % Forward integrate twist functions to get geometry information
+    x_0 = [p_0; rotm2quat(R_0)'; 0];
+    
+    obj = @(s, x) deriv_pq(s, x, u, v);
+    [~, x] = ode45(obj, s, x_0);
+    x = x';
+    
+    if any(abs(x(end,:)) > 1e-3)
+        warning('Quaternion residual greater than 0.001 during integration');
+    end
+  
+    p_spline = BSpline.interpolate(x(1:3,:), s, 5);
+    q_spline = BSpline.interpolate(x(4:7,:), s, 5);  
+    p_dot_spline = p_spline.deriv();
+    
+    p = @(s) p_spline.evaluate(s);
+    q = @(s) q_spline.evaluate(s);
+    p_dot = @(s) p_dot_spline.evaluate(s);
+    
+    % Backward integrate to obtain mechanicals information
+    y_0 = zeros(6,1);
+    
+    obj = @(s, y) deriv_nm(s, y, f, l, p_dot);
+    [~, y] = ode45(obj, fliplr(s), y_0);
+    y = fliplr(y');
+    
+    n_spline = BSpline.interpolate(y(1:3,:), s, 5);
+    m_spline = BSpline.interpolate(y(4:6,:), s, 5);
+    
+    n = @(s) n_spline.evaluate(s);
+    m = @(s) m_spline.evaluate(s);
+    
+    % Now, finally, we can close the loop on u
+    
+    u_res = u(s) - inv(K)*(quatrotate(q(s)', m(s)')');
+end
+
+function x_dot = deriv_pq(s, x, u, v)
+    p = x(1:3);
+    q = x(4:7);
+    
+    p_dot = quatrotate(q', v(s)')';
+    q_dot = 1/2*quatmultiply(q', [0; u(s)]')';
+    
+    % Quaternion constraint = 0
+    c = (q')*q - 1;
+    
+    x_dot = [p_dot; q_dot; c];
+end
+
+
+function y_dot = deriv_nm(s, y, f, l, p_dot)
+    n = y(1:3);
+%     m = y(4:6);
+    
+    n_dot = -f(s);
+    m_dot = -cross(p_dot(s), n) - l(s);
+    
+    y_dot = [n_dot; m_dot];
+end
+
+
+
+
