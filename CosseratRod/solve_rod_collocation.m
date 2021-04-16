@@ -1,4 +1,4 @@
-function [p, q, n, m] = solve_rod_collocation(f, l, K, N, M, L, p_0, R_0)
+function [p, q] = solve_rod_collocation(f, l, K, N, M, L, p_0, R_0)
 % Given the loading on the rod f and l (function handles), the rod diameter
 % D, the elastic modulus E, and shear modulus G, the number of collocation
 % points N, the length of the rod L, and initial, this function uses a 
@@ -33,7 +33,7 @@ options.Algorithm = 'levenberg-marquardt';
 obj = @(C) compute_residual(C, u_spline, f, l, s, K, p_0, R_0);
 C = fsolve(obj, C0, options);
 
-[~, p, q, n, m] = obj(C);
+[~, p, q] = obj(C);
 end
 
 function [res, p, q, n, m] = compute_residual(C, u_spline, f, l, s, K, p_0, R_0)

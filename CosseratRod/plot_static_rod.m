@@ -21,7 +21,7 @@ hold on;
 N = 100;
 plot_transforms(downsample(p_s', N), downsample(q_s', N), L/30);
 
-plot3(x, y, z, '-k', 'LineWidth', 5);
+plot3(x, y, z, '-k', 'LineWidth', 2);
 quiver3(x, y, z, f_x, f_y, f_z, 3.*L);
 
 axis tight;

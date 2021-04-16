@@ -1,4 +1,4 @@
-function x = solve_rod_collocation(f, l, K, N, M, L, p_0, R_0)
+function [p, q] = solve_rod_inverse(p, L, Q_f, Q_l, K, N, M, p_0, R_0)
 % Given the loading on the rod f and l (function handles), the rod diameter
 % D, the elastic modulus E, and shear modulus G, the number of collocation
 % points N, the length of the rod L, and initial, this function uses a 
@@ -30,26 +30,19 @@ options = optimoptions('fsolve');
 options.Display = 'iter';
 options.Algorithm = 'levenberg-marquardt';
 
-obj = @(C) compute_total_residual(C, u_spline, f, l, s, K, p_0, R_0);
+obj = @(C) compute_residual(C, u_spline, f, l, s, K, p_0, R_0);
 C = fsolve(obj, C0, options);
 
-[~, x_spline] = obj(C);
-x = @(s) x_spline.evaluate(s);
+[~, p, q] = obj(C);
 end
 
-function res = compute_residual(C, u_spline, f, l, s, K, p_0, R_0)
-    
+function [res, p, q, n, m] = compute_residual(C, u_spline, f, l, s, K, p_0, R_0)
+
     e_3 = [0; 0; 1];
     
     u_spline.C = C;
     u = @(s) u_spline.evaluate(s);
     v = @(s) e_3;
-    
-    res = compute_u_res(f, l, u, v, s, p_0, R_0, K);
-end
-
-
-function [u_res, p, q, n, m] = compute_u_res(f, l, u, v, s, p_0, R_0, K)
     
     % Forward integrate twist functions to get geometry information
     x_0 = [p_0; rotm2quat(R_0)'; 0];
@@ -83,9 +76,9 @@ function [u_res, p, q, n, m] = compute_u_res(f, l, u, v, s, p_0, R_0, K)
     n = @(s) n_spline.evaluate(s);
     m = @(s) m_spline.evaluate(s);
     
-    % Now, finally, we can close the loop on u
-    
-    u_res = u(s) - inv(K)*(quatrotate(q(s)', m(s)')');
+    % Now, finally, we can close the loop on u and v
+    res = u(s) - inv(K)*(quatrotate(q(s)', m(s)')');
+%     v_res = v(s) - inv
 end
 
 function x_dot = deriv_pq(s, x, u, v)
