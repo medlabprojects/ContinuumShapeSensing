@@ -1,0 +1,32 @@
+Acausal system -> markov property?
+  Causality is an instance of MP
+Hard constraints vs. penalty terms
+f and l is input
+  There's a deterministic a prior load plus a stochastic component to the load
+  Eq 3 => he would've gone one step before, 
+  There's multiple things we want to do -> don't do eq3 first,
+    Maybe take f and l out first to estimate the state
+  We have inputs, states, meas, no quantity can be both at once.
+  In his world, 
+  Dinesh K. Pai
+  White noise on 
+  GP approach lets you use the state eq. to define a baysian priors
+Suggestion: in contin. time world, 
+  Try to handle precurved rod by neglecting first part of d/ds eq.
+First problem to work on:
+  Neglect the -Kinv term? Implement the full thing in MatLab
+  Should be able to sample from the prior
+One final teaser: it will be easy to implement for parallel continuum robots
+Most importatn part: once you've estimated at discrete points, it's super easy to query the state at ANY s: computationally efficient (O(1))
+
+Really read the full steam ahead paper many times
+  Read the two papers in order 
+   -1: Read rassmussen and williams Ch. 2 and 3
+      Maybe code up a 1D GP model or something
+    0: Ch. 3 of book, linear models in motion and sensor
+    1: Implementing batch CTE with GPs, linear motion, nonlinear sensor
+    2: Extending to SE(3), nonlear for both
+  
+  
+Tim will send
+  Hand written notes, Danish paper
