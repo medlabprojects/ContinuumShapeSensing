@@ -3,13 +3,13 @@ Acausal system -> markov property?
 Hard constraints vs. penalty terms
 f and l is input
   There's a deterministic a prior load plus a stochastic component to the load
-  Eq 3 => he would've gone one step before, 
+  Eq 3 => he would've gone one step before,
   There's multiple things we want to do -> don't do eq3 first,
     Maybe take f and l out first to estimate the state
   We have inputs, states, meas, no quantity can be both at once.
-  In his world, 
+  In his world,
   Dinesh K. Pai
-  White noise on 
+  White noise on
   GP approach lets you use the state eq. to define a baysian priors
 Suggestion: in contin. time world, 
   Try to handle precurved rod by neglecting first part of d/ds eq.
@@ -26,7 +26,6 @@ Really read the full steam ahead paper many times
     0: Ch. 3 of book, linear models in motion and sensor
     1: Implementing batch CTE with GPs, linear motion, nonlinear sensor
     2: Extending to SE(3), nonlear for both
-  
   
 Tim will send
   Hand written notes, Danish paper
