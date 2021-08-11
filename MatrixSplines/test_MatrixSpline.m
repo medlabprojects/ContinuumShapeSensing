@@ -12,11 +12,11 @@ spline.setup(a, b, num_segments, output_dim);
 
 coefficients = zeros(size(spline.coefficients));
 
-coefficients(10) = 1;
-coefficients(11) = 1;
-coefficients(12) = 1;
+coefficients(1) = -20;
+coefficients(4) = 1;
+coefficients(7) = 1;
 
-coefficients = rand(size(coefficients));
+% coefficients = rand(size(coefficients));
 spline.set_coefficients(coefficients);
 
 t = linspace(a, b, 1000);

@@ -1,0 +1,21 @@
+function simulate_pendulum_motion(x_0, t_span, T, m)
+
+t = t_span(1):T:t_span(2);
+x = zeros(2, length(t));
+z = zeros(1, length(t));
+
+x_gt(:,1) = x_0;
+z_gt(:,1) = observation_equation(x_0, m_gt);
+
+Q_mag = 5e0;
+Q = diag([Q_mag^2, Q_mag^2]);
+
+u = @(t) 0;
+
+for iii = 2:length(t_gt)
+    x_dot = state_equation(x_gt(:,iii - 1), u(t_gt(iii))) + mvnrnd([0;0], Q, 1)';
+    x_gt(:,iii) = x_gt(:,iii - 1) + x_dot*T;
+    z_gt(:,iii) = observation_equation(x_gt(:,iii), m_gt);
+end
+
+end

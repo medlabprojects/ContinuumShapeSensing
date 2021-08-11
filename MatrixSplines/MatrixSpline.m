@@ -42,8 +42,11 @@ classdef MatrixSpline < handle
             x = zeros(obj.output_dim, length(t));
 
             for iii = 1:length(t)
-                if (t(iii) <= obj.a) || (t(iii) >= obj.b)
+                if (t(iii) < obj.a) || (t(iii) > obj.b)
                     x(:,iii) = nan(obj.output_dim, 1);
+                elseif t(iii) == obj.b
+                    phi = get_phi(obj, t(iii) - 1e-6, deriv_order);
+                    x(:,iii) = phi*obj.coefficients;
                 else
                     phi = get_phi(obj, t(iii), deriv_order);
                     x(:,iii) = phi*obj.coefficients;
@@ -52,6 +55,11 @@ classdef MatrixSpline < handle
         end
         
         function phi = get_phi(obj, t, deriv_order)
+            % This is a hack, and I need to change this later
+            if t == obj.b
+                t = obj.b - 1e-6;
+            end
+            
             persistent B D
             
             B = 1/6*[1  4  1  0
@@ -63,7 +71,7 @@ classdef MatrixSpline < handle
                      0  0  2  0
                      0  0  0  3
                      0  0  0  0];
-    
+            
             phi = zeros(obj.output_dim, obj.num_basis*obj.output_dim);
             interval = find_interval(obj, t);
     
